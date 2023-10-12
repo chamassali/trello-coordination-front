@@ -11,3 +11,60 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+h1 {
+  margin: 0;
+}
+
+.trello-page-container {
+  width: 100%;
+  height: 100vh;
+  background-image: url(../public/space.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding: 40px 25px;
+}
+.columns-container {
+  display: flex;
+}
+
+.columns-card {
+  max-width: 350px;
+  width: 100%;
+}
+
+.page-title {
+  color: white;
+  margin-bottom: 40px;
+}
+
+.columns-card:not(:first-child) {
+  margin-left: 20px;
+}
+
+.add-task-form {
+  width: 300px;
+  padding: 30px;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-container label {
+  margin-bottom: 10px;
+}
+
+.input-container input, textarea, select {
+  padding: 10px;
+  border-radius: 50px;
+  border: 1px solid grey;
+
+} 
+
+.input-container:not(:last-child) {
+  margin-bottom: 20px;
+}
+
+
