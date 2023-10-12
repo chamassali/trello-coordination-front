@@ -31,15 +31,20 @@ const TrelloPage: React.FC = () => {
     const [apiData, setApiData] = useState<CardData[]>([]);
 
     useEffect(() => {
-      fetch('https://trello-0xr7.onrender.com/api/cards')
-        .then((response) => response.json())
-        .then((data: CardData[]) => {
-          setApiData(data);
-        })
-        .catch((error) => {
-          console.error('Error fetching data:', error);
-        });
+        fetch('https://trello-0xr7.onrender.com/api/cards')
+            .then((response) => response.json())
+            .then((data: CardData[]) => {
+                setApiData(data);
+            })
+            .catch((error) => {
+                console.error('Error fetching data:', error);
+            });
     }, []);
+
+    const todoCards: CardData[] = apiData.filter((card) => card.state === 'todo');
+    const inProgressCards: CardData[] = apiData.filter((card) => card.state === 'inprogress');
+    const doneCards: CardData[] = apiData.filter((card) => card.state === 'done');
+
 
     const handleSelectChange = (index: number, field: string, event: React.ChangeEvent<HTMLSelectElement>) => {
         const updatedFormStates = [...formStates];
@@ -109,111 +114,129 @@ const TrelloPage: React.FC = () => {
 
     return (
         <div className="trello-page-container">
-          <h1 className="page-title mb-6">Trello Page</h1>
-    
-          <div className="columns-container">
-            {popups.map((popup, index) => (
-              <div className="columns-card" key={index}>
-                <Card className="" sx={{ minWidth: 275 }}>
-                  <CardContent>
-                    <Typography variant="h5" component="div">
-                      {index === 0
-                        ? 'To Do'
-                        : index === 1
-                        ? 'In Progress'
-                        : 'Done'}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      aria-describedby={popup.open ? 'spring-popper' : undefined}
-                      size="small"
-                      type="button"
-                      onClick={handlePopupClick(index)('bottom-end')}
-                    >
-                      Add task
-                    </Button>
-                    <Popper
-                      open={popup.open}
-                      anchorEl={popup.anchorEl}
-                      placement={popup.placement}
-                      transition
-                    >
-                      {({ TransitionProps }) => (
-                        <Fade {...TransitionProps} timeout={350}>
-                          <Paper>
-                            <form className="add-task-form">
-                              <div className="input-container">
-                                <label>Title:</label>
-                                <input
-                                  type="text"
-                                  value={formStates[index].title}
-                                  onChange={handleInputChange(index, 'title')}
-                                />
-                              </div>
-                              <div className="input-container">
-                                <label>Description:</label>
-                                <textarea
-                                  value={formStates[index].description}
-                                  onChange={handleInputChange(index, 'description')}
-                                />
-                              </div>
-                              <div className="input-container">
-                                <label>Priority:</label>
-                                <select
-                                  value={formStates[index].priority}
-                                  onChange={(event) =>
-                                    handleSelectChange(index, 'priority', event)
-                                  }
+            <h1 className="page-title mb-6">Trello Page</h1>
+
+            <div className="columns-container">
+                {popups.map((popup, index) => (
+                    <div className="columns-card" key={index}>
+                        <Card className="" sx={{ minWidth: 275 }}>
+                        <CardContent>
+                            {index === 0
+                                ?
+                                <>
+                                    {todoCards.map((card, index) => (
+                                        <div className="card" key={index}>
+                                            <h2>{card.title}</h2>
+                                            <p>{card.desc}</p>
+                                        </div>
+                                    ))}
+                                </>
+
+
+                                : index === 1
+                                    ?
+                                    <>
+                                        {inProgressCards.map((card, index) => (
+                                            <div className="card" key={index}>
+                                                <h2>{card.title}</h2>
+                                                <p>{card.desc}</p>
+                                            </div>
+                                        ))}
+                                    </>
+                                    :
+                                    <>
+                                        {doneCards.map((card, index) => (
+                                            <div className="card" key={index}>
+                                                <h2>{card.title}</h2>
+                                                <p>{card.desc}</p>
+                                            </div>
+                                        ))}
+                                    </>
+                            }
+                           
+
+                            </CardContent>
+                            <CardActions>
+                                <Button
+                                    aria-describedby={popup.open ? 'spring-popper' : undefined}
+                                    size="small"
+                                    type="button"
+                                    onClick={handlePopupClick(index)('bottom-end')}
                                 >
-                                  <option value="low">Low</option>
-                                  <option value="medium">Medium</option>
-                                  <option value="high">High</option>
-                                </select>
-                              </div>
-                              <div className="input-container">
-                                <label>State:</label>
-                                <select
-                                  value={formStates[index].state}
-                                  onChange={(event) =>
-                                    handleSelectChange(index, 'state', event)
-                                  }
+                                    Add task
+                                </Button>
+                                <Popper
+                                    open={popup.open}
+                                    anchorEl={popup.anchorEl}
+                                    placement={popup.placement}
+                                    transition
                                 >
-                                  <option value="todo">To Do</option>
-                                  <option value="inprogress">In Progress</option>
-                                  <option value="done">Done</option>
-                                </select>
-                              </div>
-    
-                              <Button
-                                onClick={handleFormSubmit(index)}
-                                variant="contained"
-                                color="primary"
-                              >
-                                Submit
-                              </Button>
-                            </form>
-                          </Paper>
-                        </Fade>
-                      )}
-                    </Popper>
-                  </CardActions>
-                </Card>
-              </div>
-            ))}
-          </div>
-          
-          {/* Display card details from API data */}
-          <div className="card-details">
-            {apiData.map((card, index) => (
-              <div className="card" key={index}>
-                <h2>{card.title}</h2>
-                <p>{card.desc}</p>
-              </div>
-            ))}
-          </div>
+                                    {({ TransitionProps }) => (
+                                        <Fade {...TransitionProps} timeout={350}>
+                                            <Paper>
+                                                <form className="add-task-form">
+                                                    <div className="input-container">
+                                                        <label>Title:</label>
+                                                        <input
+                                                            type="text"
+                                                            value={formStates[index].title}
+                                                            onChange={handleInputChange(index, 'title')}
+                                                        />
+                                                    </div>
+                                                    <div className="input-container">
+                                                        <label>Description:</label>
+                                                        <textarea
+                                                            value={formStates[index].description}
+                                                            onChange={handleInputChange(index, 'description')}
+                                                        />
+                                                    </div>
+                                                    <div className="input-container">
+                                                        <label>Priority:</label>
+                                                        <select
+                                                            value={formStates[index].priority}
+                                                            onChange={(event) =>
+                                                                handleSelectChange(index, 'priority', event)
+                                                            }
+                                                        >
+                                                            <option value="low">Low</option>
+                                                            <option value="medium">Medium</option>
+                                                            <option value="high">High</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="input-container">
+                                                        <label>State:</label>
+                                                        <select
+                                                            value={formStates[index].state}
+                                                            onChange={(event) =>
+                                                                handleSelectChange(index, 'state', event)
+                                                            }
+                                                        >
+                                                            <option value="todo">To Do</option>
+                                                            <option value="inprogress">In Progress</option>
+                                                            <option value="done">Done</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <Button
+                                                        onClick={handleFormSubmit(index)}
+                                                        variant="contained"
+                                                        color="primary"
+                                                    >
+                                                        Submit
+                                                    </Button>
+                                                </form>
+                                            </Paper>
+                                        </Fade>
+                                    )}
+                                </Popper>
+                            </CardActions>
+                        </Card>
+                    </div>
+                ))}
+            </div>
+
         </div>
-      );
-    }
-    
-    export default TrelloPage;
+    );
+}
+
+export default TrelloPage;
