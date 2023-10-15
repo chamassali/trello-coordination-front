@@ -12,7 +12,7 @@ code {
     monospace;
 }
 
-h1 {
+h1, h2, h3, h4{
   margin: 0;
 }
 
@@ -31,6 +31,7 @@ h1 {
 .columns-card {
   max-width: 350px;
   width: 100%;
+  border-radius: 15px;
 }
 
 .page-title {
@@ -67,4 +68,51 @@ h1 {
   margin-bottom: 20px;
 }
 
+.columns-card > div {
+  border-radius: 15px;
+}
 
+.columns-card h2 {
+  margin-bottom: 15px;
+}
+
+.trello-card h2, .trello-card p {
+  margin: 0;
+}
+
+.trello-card {
+  padding: 15px;
+  background-color: #f1f1f1;
+  border-radius: 10px;
+  position: relative;
+}
+
+.trello-card:not(:last-child){
+margin-bottom: 10px;
+}
+
+.card-priority {
+  width: 70px;
+  height: 10px;
+  display: block;
+  border-radius: 50px;
+  margin-bottom: 7px;
+}
+
+.low-priority {
+  background-color: #FFDDDD;
+
+}
+
+.medium-priority {
+  background-color: #FFFFAA;
+}
+
+.high-priority {
+  background-color: #AAFFAA;
+}
+
+.delete-button {
+  text-transform: capitalize !important;
+  margin-top: 10px !important;
+}

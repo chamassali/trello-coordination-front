@@ -28,6 +28,57 @@ interface CardData {
 
 const TrelloPage: React.FC = () => {
 
+    const handleFormSubmit = (index: number) => () => {
+        const formData = formStates[index];
+
+        // Check if the priority is a valid value
+        if (['low', 'medium', 'high'].includes(formData.priority)) {
+            // Make a POST request to the API to add a new task
+            fetch('https://trello-0xr7.onrender.com/api/cards', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+                .then((response) => response.json())
+                .then((newTask: CardData) => {
+                    setApiData((prevApiData) => [...prevApiData, newTask]);
+                })
+                .catch((error) => {
+                    console.error('Error adding a task:', error);
+                });
+
+            // Reset the form data for the specific popup
+            const updatedFormStates = [...formStates];
+            updatedFormStates[index] = { ...initialFormState };
+            setFormStates(updatedFormStates);
+        } else {
+            // Handle validation error
+            console.error('Invalid priority value');
+            // You can display an error message to the user if needed
+        }
+    };
+
+    const handleDeleteTask = (taskId: string) => {
+        // Send a DELETE request to the API to delete the task
+        fetch(`https://trello-0xr7.onrender.com/api/cards/${taskId}`, {
+            method: 'DELETE',
+        })
+            .then((response) => {
+                if (response.ok) {
+                    // If the deletion was successful, update the state to remove the task
+                    setApiData((prevApiData) => prevApiData.filter((task) => task._id !== taskId));
+                } else {
+                    console.error('Error deleting task:', response.status);
+                }
+            })
+            .catch((error) => {
+                console.error('Error deleting task:', error);
+            });
+    };
+
+
     const [apiData, setApiData] = useState<CardData[]>([]);
 
     useEffect(() => {
@@ -44,6 +95,79 @@ const TrelloPage: React.FC = () => {
     const todoCards: CardData[] = apiData.filter((card) => card.state === 'todo');
     const inProgressCards: CardData[] = apiData.filter((card) => card.state === 'inprogress');
     const doneCards: CardData[] = apiData.filter((card) => card.state === 'done');
+
+
+
+
+
+    const handleDragStart = (event: React.DragEvent, cardId: string, sourceColumnId: string) => {
+        event.dataTransfer.setData("text/plain", cardId);
+        event.dataTransfer.setData("sourceColumnId", sourceColumnId);
+    };
+
+
+
+
+    const handleDragOver = (event: React.DragEvent) => {
+        event.preventDefault();
+    };
+
+    const handleDrop = (event: React.DragEvent, cardId: string, sourceColumnId: string, targetColumnId: string) => {
+        event.preventDefault();
+
+        // Find the dragged card by its card ID and source column
+        const draggedCardIndex = apiData.findIndex((card) => card._id === cardId && card.state === sourceColumnId);
+
+        if (draggedCardIndex !== -1) {
+            const updatedApiData = [...apiData];
+            const draggedCard = updatedApiData[draggedCardIndex];
+
+            // Determine the index where the card will be placed in the new column
+            const targetIndex = 0; // You should calculate this based on your specific logic
+
+            // Move the card to the new column
+            draggedCard.state = targetColumnId;
+            updatedApiData.splice(draggedCardIndex, 1); // Remove from the source column
+            updatedApiData.splice(targetIndex, 0, draggedCard); // Add to the new column
+
+            setApiData(updatedApiData);
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const getPriorityClass = (priority: string | number) => {
+        switch (priority) {
+            case "low":
+                return "low-priority";
+            case "medium":
+                return "medium-priority";
+            case "high":
+                return "high-priority";
+            default:
+                return "";
+        }
+    };
+
+
+
+
+
+
+
+
+
 
 
     const handleSelectChange = (index: number, field: string, event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -63,7 +187,7 @@ const TrelloPage: React.FC = () => {
 
     const initialFormState = {
         title: '',
-        description: '',
+        desc: '',
         priority: '',
         state: '',
     };
@@ -102,15 +226,16 @@ const TrelloPage: React.FC = () => {
         });
     };
 
-    const handleFormSubmit = (index: number) => () => {
-        // Handle form submission for the popup at the specified index (0, 1, or 2).
-        // You can access the form data from the formStates state.
-        console.log('Form submitted for popup at index', index, formStates[index]);
-        // Reset the form data for the specific popup
-        const updatedFormStates = [...formStates];
-        updatedFormStates[index] = { ...initialFormState };
-        setFormStates(updatedFormStates);
-    };
+    // const handleFormSubmit = (index: number) => () => {
+    //     // Handle form submission for the popup at the specified index (0, 1, or 2).
+    //     // You can access the form data from the formStates state.
+    //     console.log('Form submitted for popup at index', index, formStates[index]);
+    //     // Reset the form data for the specific popup
+    //     const updatedFormStates = [...formStates];
+    //     updatedFormStates[index] = { ...initialFormState };
+    //     setFormStates(updatedFormStates);
+    // };
+
 
     return (
         <div className="trello-page-container">
@@ -118,42 +243,96 @@ const TrelloPage: React.FC = () => {
 
             <div className="columns-container">
                 {popups.map((popup, index) => (
-                    <div className="columns-card" key={index}>
+                    <div className="columns-card" key={index} id={`column-${index}`} draggable="true" onDrop={(event) => handleDrop(event, '', '', 'todo')} onDragOver={(event) => handleDragOver(event)}>
                         <Card className="" sx={{ minWidth: 275 }}>
-                        <CardContent>
-                            {index === 0
-                                ?
-                                <>
-                                    {todoCards.map((card, index) => (
-                                        <div className="card" key={index}>
-                                            <h2>{card.title}</h2>
-                                            <p>{card.desc}</p>
-                                        </div>
-                                    ))}
-                                </>
-
-
-                                : index === 1
+                            <CardContent>
+                                {index === 0
                                     ?
                                     <>
-                                        {inProgressCards.map((card, index) => (
-                                            <div className="card" key={index}>
-                                                <h2>{card.title}</h2>
+                                        <h2>
+                                            To Do
+                                        </h2>
+                                        {todoCards.map((card, index) => (
+                                            <div className="trello-card" key={index}
+                                                draggable="true"
+                                                onDragStart={(event) => handleDragStart(event, card._id, card.state)}
+                                                onDragOver={(event) => handleDragOver(event)}
+                                                onDrop={(event) => handleDrop(event, card._id, card.state, 'todo')}>
+
+                                                <span className={`card-priority ${getPriorityClass(card.priority)}`}></span>
+
+                                                <h4>{card.title}</h4>
                                                 <p>{card.desc}</p>
+                                                <Button
+                                                    variant="outlined"
+                                                    className='delete-button'
+                                                    color="primary"
+                                                    onClick={() => handleDeleteTask(card._id)}
+                                                >
+                                                    Delete
+                                                </Button>
                                             </div>
                                         ))}
                                     </>
-                                    :
-                                    <>
-                                        {doneCards.map((card, index) => (
-                                            <div className="card" key={index}>
-                                                <h2>{card.title}</h2>
-                                                <p>{card.desc}</p>
-                                            </div>
-                                        ))}
-                                    </>
-                            }
-                           
+
+
+                                    : index === 1
+                                        ?
+                                        <>
+                                            <h2>
+                                                In Progress
+                                            </h2>
+                                            {inProgressCards.map((card, index) => (
+                                                <div className="trello-card" key={index}
+                                                    draggable="true"
+                                                    onDragStart={(event) => handleDragStart(event, card._id, card.state)}
+                                                    onDragOver={(event) => handleDragOver(event)}
+                                                    onDrop={(event) => handleDrop(event, card._id, card.state, 'inprogress')}>
+
+                                                    <span className={`card-priority ${getPriorityClass(card.priority)}`}></span>
+                                                    <h4>{card.title}</h4>
+                                                    <p>{card.desc}</p>
+
+                                                    <Button
+                                                        variant="outlined"
+                                                        className='delete-button'
+                                                        color="primary"
+                                                        onClick={() => handleDeleteTask(card._id)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </>
+                                        :
+                                        <>
+                                            <h2>
+                                                Done
+                                            </h2>
+                                            {doneCards.map((card, index) => (
+                                                <div className="trello-card" key={index}
+                                                    draggable="true"
+                                                    onDragStart={(event) => handleDragStart(event, card._id, card.state)}
+                                                    onDragOver={(event) => handleDragOver(event)}
+                                                    onDrop={(event) => handleDrop(event, card._id, card.state, 'done')}>
+
+                                                    <span className={`card-priority ${getPriorityClass(card.priority)}`}></span>
+                                                    <h4>{card.title}</h4>
+                                                    <p>{card.desc}</p>
+
+                                                    <Button
+                                                        variant="outlined"
+                                                        className='delete-button'
+                                                        color="primary"
+                                                        onClick={() => handleDeleteTask(card._id)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </>
+                                }
+
 
                             </CardContent>
                             <CardActions>
@@ -185,9 +364,10 @@ const TrelloPage: React.FC = () => {
                                                     </div>
                                                     <div className="input-container">
                                                         <label>Description:</label>
-                                                        <textarea
-                                                            value={formStates[index].description}
-                                                            onChange={handleInputChange(index, 'description')}
+                                                        <input
+                                                            type="text"
+                                                            value={formStates[index].desc} // Should be 'desc'
+                                                            onChange={handleInputChange(index, 'desc')} // Should be 'desc'
                                                         />
                                                     </div>
                                                     <div className="input-container">
